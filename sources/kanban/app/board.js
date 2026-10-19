@@ -15,7 +15,7 @@ const WORDS = {
     attachCurrent: '关联当前任务', pickTask: '关联任务…', start: '新建任务', starting: '正在新建任务…',
     pickFile: '关联任务文件…', pickChatFile: '关联群文件…', addUrl: '添加链接', urlPlaceholder: 'https://…', ok: '确定', cancel: '取消',
     filter: '筛选', chooseTask: '选择任务', noTasks: '本机暂无任务', noFiles: '未找到文件。输入文件名可搜索全部对话。',
-    show: '查看', openBeside: '在旁边打开', pickProjectFile: '关联项目文件…', chooseProject: '选择项目', noProjects: '暂无项目', desktopOnly: '看板仅在电脑上可用。', browser: '打开', message: '查看消息',
+    show: '查看', openBeside: '在旁边打开', pickProjectFile: '关联项目文件…', chooseProject: '选择项目', noProjects: '暂无项目', desktopOnly: '看板仅支持在电脑上使用', browser: '打开', message: '查看消息',
     comment: '添加评论', send: '发表', byAgent: (n) => `⚡ ${n}`, byPerson: '我',
     noStatus: (e) => `无法读取本机任务状态：${e}`, noBoard: (e) => `无法读取看板：${e}`,
     handText: (c) => `请处理看板上的卡片（id ${c.id}）：${c.title}${c.note ? `\n\n${c.note}` : ''}\n\n开始时用看板的 claim 工具认领，完成后用 move 移到「待验收」，并用 link 关联产出。`,

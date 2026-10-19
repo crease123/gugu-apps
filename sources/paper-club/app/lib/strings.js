@@ -162,7 +162,7 @@ const STRINGS = {
     noMessagesHere: 'Chat messages cannot be read here (a newer gugu, with "read chat messages" allowed), so how often it was discussed is not shown.',
     sessionNoPill: 'A session\'s PDF has no pill (a pill points at a chat\'s file): the passage, its page and path are in the session\'s composer.',
     askSession: '{text}\n{path}, page {n}: "{quote}"',
-    askProject: '{text}\n{path} in the project "{project}" on this computer, page {n}: "{quote}"\n(With 论文共读\'s tools pass project: "{id}" and path: "{path}"; cite with the links paper-club__cite gives.)',
+    askProject: '{text}\n{path} in the project "{project}" on this computer, page {n}: "{quote}"\n(With Paper Club\'s tools pass project: "{id}" and path: "{path}"; cite with the links paper-club__cite gives.)',
     askWhich: 'Ask which task',
     askNew: 'New task',
     askNone: 'No tasks on this computer yet: choose New task to start one in this paper\'s project.',

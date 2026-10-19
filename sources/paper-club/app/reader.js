@@ -338,11 +338,21 @@ function unrenderPage(page) {
 async function rezoom(index) {
   const next = Math.max(0, Math.min(ZOOMS.length - 1, index))
   if (next === state.zoom || !state.doc) return
-  const at = state.current
   state.zoom = next
+  refit()
+}
+
+/**
+ * Every page drawn again at the scale now (a zoom, a new width), the page read kept in view. A page the observer already
+ * saw on screen is observed afresh: it would not be told again while it stays on screen, and would stay blank.
+ */
+function refit() {
+  const at = state.current
   for (const page of state.pages) {
     unrenderPage(page)
     sizePage(page)
+    observer.unobserve(page.el)
+    observer.observe(page.el)
   }
   scrollToPage(at)
 }
@@ -1004,13 +1014,8 @@ new ResizeObserver(() => {
     if (!vp1) return
     const fit = Math.max(0.3, ($('pages').clientWidth - 24) / vp1.width)
     if (Math.abs(fit - state.fitScale) < 0.01) return
-    const at = state.current
     state.fitScale = fit
-    for (const page of state.pages) {
-      unrenderPage(page)
-      sizePage(page)
-    }
-    scrollToPage(at)
+    refit()
   }, 200)
 }).observe($('pages'))
 

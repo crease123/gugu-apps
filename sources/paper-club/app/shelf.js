@@ -142,7 +142,8 @@ function notesOf(pdf) {
 function draw() {
   const t = state.t
   const pdfs = state.entries.filter(isPdf).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
-  if (!pdfs.length) return empty(state.library ? t.libraryEmpty : state.ctx.chat ? t.shelfEmpty : t.sessionEmpty)
+  // The library with nowhere to import into says why in its note alone: no 「paste one above」 under an import bar not there.
+  if (!pdfs.length) return empty(state.library ? (state.targets.length ? t.libraryEmpty : null) : state.ctx.chat ? t.shelfEmpty : t.sessionEmpty)
   $('list-title').hidden = false
   $('empty').replaceChildren()
   $('papers').replaceChildren(
@@ -213,6 +214,7 @@ function readerUrl(pdf, tab) {
 
 function empty(text) {
   $('papers').replaceChildren()
+  if (!text) return $('empty').replaceChildren()
   const node = document.createElement('gugu-empty')
   node.setAttribute('icon', 'book-open')
   const strong = document.createElement('strong')

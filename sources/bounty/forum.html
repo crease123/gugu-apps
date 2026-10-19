@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>悬赏</title>
+  <link rel="stylesheet" href="forum.css">
+</head>
+<body>
+  <main id="main" aria-labelledby="heading">
+    <header id="bar" class="row">
+      <h1 id="heading"></h1>
+      <span class="grow"></span>
+      <button id="compose" class="primary" type="button"></button>
+    </header>
+
+    <form id="draft" class="card stack" hidden>
+      <label><span id="l-title"></span> <input id="d-title" type="text" maxlength="100" required autocomplete="off"></label>
+      <label><span id="l-body"></span> <textarea id="d-body" rows="5" maxlength="4000" required></textarea></label>
+      <div class="row">
+        <label><span id="l-amount"></span> <input id="d-amount" type="number" min="1" max="100" step="1" value="10" required></label>
+        <label><span id="l-days"></span> <select id="d-days"></select></label>
+      </div>
+      <fieldset>
+        <legend id="l-visibility"></legend>
+        <label><input type="radio" name="visibility" value="public" checked> <span id="v-public"></span></label>
+        <label><input type="radio" name="visibility" value="poster_only"> <span id="v-poster"></span></label>
+        <small id="v-note" class="muted"></small>
+      </fieldset>
+      <p id="draft-alert" role="alert" hidden></p>
+      <div class="row end">
+        <button id="draft-cancel" type="button"></button>
+        <button id="draft-post" class="primary" type="submit"></button>
+      </div>
+    </form>
+
+    <div id="filters" class="row">
+      <div id="status" role="tablist"></div>
+      <span class="grow"></span>
+      <input id="query" type="search" autocomplete="off">
+      <select id="mine"></select>
+      <select id="sort"></select>
+    </div>
+
+    <p id="alert" role="alert" hidden></p>
+    <ul id="posts" class="list"></ul>
+    <div id="empty" hidden></div>
+    <div class="row center"><button id="more" type="button" hidden></button></div>
+  </main>
+  <script type="module" src="forum.js"></script>
+</body>
+</html>

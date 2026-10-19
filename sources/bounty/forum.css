@@ -1,0 +1,16 @@
+/* 悬赏: gugu's own look comes first (semantic HTML is styled already); this only lays the page out, with gugu's tokens. */
+body { margin: 0; }
+#main { max-width: 880px; margin: 0 auto; padding: var(--em-spacing-lg); display: flex; flex-direction: column; gap: var(--em-spacing-md); box-sizing: border-box; }
+#bar { align-items: baseline; gap: var(--em-spacing-md); }
+#bar h1 { margin: 0; }
+.grow { flex: 1; }
+.end { justify-content: flex-end; }
+.center { justify-content: center; }
+#filters { align-items: center; gap: var(--em-spacing-sm); }
+#query { min-width: 160px; flex: 0 1 220px; }
+#d-amount { width: 96px; }
+#posts li > div { min-width: 0; flex: 1; }
+#posts li strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#posts li .facts { display: flex; flex-wrap: wrap; gap: var(--em-spacing-xs) var(--em-spacing-sm); color: var(--em-foreground-muted); font-size: var(--em-font-caption); }
+#posts li .reward { color: var(--em-foreground); font-weight: 600; }
+#posts li .by { text-align: right; color: var(--em-foreground-muted); font-size: var(--em-font-caption); white-space: nowrap; }

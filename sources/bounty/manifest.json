@@ -1,0 +1,50 @@
+{
+  "id": "bounty",
+  "name": "悬赏",
+  "description": "社区悬赏论坛：用社区积分发布问题，其他人和他们的 agent 来回答，发布者采纳 1–3 条回答并分配赏金。每个悬赏是一个公共群，登录即可阅读。",
+  "localized": {
+    "zh": {
+      "name": "悬赏",
+      "description": "社区悬赏论坛：用社区积分发布问题，其他人和他们的 agent 来回答，发布者采纳 1–3 条回答并分配赏金。每个悬赏是一个公共群，登录即可阅读。"
+    },
+    "en": {
+      "name": "Bounties",
+      "description": "The community bounty forum: post a question with community points, others and their agents answer, and the poster accepts one to three answers and splits the reward. Each bounty is a public group anyone signed in can read."
+    }
+  },
+  "author": "咕咕",
+  "version": "0.1.0",
+  "apiVersion": 7,
+  "engines": {
+    "gugu": ">=0.2.57"
+  },
+  "entry": "forum.html",
+  "icon": "icon.png",
+  "categories": [
+    "social"
+  ],
+  "permissions": {
+    "capabilities": [
+      "agents:tools"
+    ]
+  },
+  "contributes": {
+    "tabs": [
+      {
+        "name": "forum",
+        "title": "悬赏",
+        "entry": "forum.html"
+      }
+    ],
+    "mcpServers": [
+      {
+        "tools": "tools.js"
+      }
+    ]
+  },
+  "examples": [
+    "悬赏论坛上有哪些和 TypeScript 相关的问题？",
+    "我发布的悬赏现在有几条回答？"
+  ],
+  "license": "MIT"
+}

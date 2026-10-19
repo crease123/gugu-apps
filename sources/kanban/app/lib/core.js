@@ -75,6 +75,7 @@ export function findColumn(board, name) {
 const LINK_KINDS = {
   task: ['session'],
   file: ['session', 'path'],
+  project: ['project', 'path'],
   chatfile: ['file'],
   message: ['message'],
   pr: ['url'],
@@ -88,8 +89,8 @@ function checkLink(link) {
     if (typeof link[field] !== 'string' || !link[field].trim()) throw new Error(`a ${link.kind} link needs ${field}`)
   }
   if ((link.kind === 'pr' || link.kind === 'url') && !/^https?:\/\//.test(link.url)) throw new Error('a link url starts with http:// or https://')
-  if (link.kind === 'file' && (link.path.startsWith('/') || link.path.split('/').includes('..'))) {
-    throw new Error("a file link's path is relative to its task's working copy, without ..")
+  if ((link.kind === 'file' || link.kind === 'project') && (link.path.startsWith('/') || link.path.split('/').includes('..'))) {
+    throw new Error("a file link's path is relative to its task's working copy or project folder, without ..")
   }
   const kept = { kind: link.kind }
   for (const [key, value] of Object.entries(link)) if (typeof value === 'string' && value) kept[key] = value

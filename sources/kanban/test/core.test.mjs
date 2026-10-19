@@ -95,3 +95,13 @@ test('a task status reads on the card as gugu states it', () => {
   assert.equal(taskState({ status: null }).key, 'none')
   assert.equal(taskState(null).key, 'gone')
 })
+
+test('a project file link needs its project and a path inside it', () => {
+  const board = emptyBoard()
+  const card = applyOp(board, { type: 'card.create', title: 'x' }, ctx()).card
+  const { link } = applyOp(board, { type: 'link.add', card, link: { kind: 'project', project: 'p1', path: 'docs/a.md', title: 'proj' } }, ctx())
+  assert.deepEqual({ ...board.cards[card].links[link], at: undefined, by: undefined }, { kind: 'project', project: 'p1', path: 'docs/a.md', title: 'proj', at: undefined, by: undefined })
+  assert.throws(() => applyOp(board, { type: 'link.add', card, link: { kind: 'project', path: 'a.md' } }, ctx()), /needs project/)
+  assert.throws(() => applyOp(board, { type: 'link.add', card, link: { kind: 'project', project: 'p1', path: '../../etc/passwd' } }, ctx()), /without \.\./)
+})
+

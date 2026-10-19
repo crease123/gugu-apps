@@ -9,14 +9,13 @@ const WORDS = {
     title: '看板', newPlaceholder: '新卡片，回车添加', add: '添加', attach: '关联当前任务',
     roles: { todo: '待办', doing: '进行中', review: '待验收', done: '完成' },
     states: { running: '运行中', parked: '后台运行', approval: '待批准', answer: '待回复', done: '本轮完成', stopped: '已停止', error: '出错', gone: '任务已移除', none: '无状态' },
-    note: 'agent 通过工具所做的修改，在任务状态变化或重新打开看板时显示。',
     addColumn: '添加列', columnName: '列名', back: '返回', close: '关闭', del: '删除卡片', delAgain: '再次点击确认删除',
     tasks: '任务', links: '文件与链接', noteH: '说明', comments: '评论', edit: '编辑', done: '完成',
     noteEmpty: '暂无说明', open: '打开任务', handTo: '转给任务', remove: '移除',
     attachCurrent: '关联当前任务', pickTask: '关联任务…', start: '新建任务', starting: '正在新建任务…',
     pickFile: '关联任务文件…', pickChatFile: '关联群文件…', addUrl: '添加链接', urlPlaceholder: 'https://…', ok: '确定', cancel: '取消',
     filter: '筛选', chooseTask: '选择任务', noTasks: '本机暂无任务', noFiles: '未找到文件。输入文件名可搜索全部对话。',
-    show: '查看', openIn: '用 App 打开', peekLater: '此类文件暂不支持在卡片内预览', browser: '打开', message: '查看消息',
+    show: '查看', openBeside: '在旁边打开', pickProjectFile: '关联项目文件…', chooseProject: '选择项目', noProjects: '暂无项目', desktopOnly: '看板仅在电脑上可用。', browser: '打开', message: '查看消息',
     comment: '添加评论', send: '发表', byAgent: (n) => `⚡ ${n}`, byPerson: '我',
     noStatus: (e) => `无法读取本机任务状态：${e}`, noBoard: (e) => `无法读取看板：${e}`,
     handText: (c) => `请处理看板上的卡片（id ${c.id}）：${c.title}${c.note ? `\n\n${c.note}` : ''}\n\n开始时用看板的 claim 工具认领，完成后用 move 移到「待验收」，并用 link 关联产出。`,
@@ -25,14 +24,13 @@ const WORDS = {
     title: 'Board', newPlaceholder: 'New card, press Enter to add', add: 'Add', attach: 'Link current task',
     roles: { todo: 'To do', doing: 'In progress', review: 'Review', done: 'Done' },
     states: { running: 'Running', parked: 'Running in background', approval: 'Awaiting approval', answer: 'Awaiting reply', done: 'Turn complete', stopped: 'Stopped', error: 'Error', gone: 'Task removed', none: 'No status' },
-    note: "Changes made by agents through tools appear when a task's status changes or when the board is reopened.",
     addColumn: 'Add column', columnName: 'Column name', back: 'Back', close: 'Close', del: 'Delete card', delAgain: 'Click again to confirm',
     tasks: 'Tasks', links: 'Files and links', noteH: 'Note', comments: 'Comments', edit: 'Edit', done: 'Done',
     noteEmpty: 'No note', open: 'Open task', handTo: 'Send to task', remove: 'Remove',
     attachCurrent: 'Link current task', pickTask: 'Link task…', start: 'New task', starting: 'Creating task…',
     pickFile: 'Link task file…', pickChatFile: 'Link chat file…', addUrl: 'Add link', urlPlaceholder: 'https://…', ok: 'OK', cancel: 'Cancel',
     filter: 'Filter', chooseTask: 'Select task', noTasks: 'No tasks on this device', noFiles: 'No files found. Enter a file name to search all chats.',
-    show: 'View', openIn: 'Open in App', peekLater: 'Preview in the card is not available for this file type', browser: 'Open', message: 'View message',
+    show: 'View', openBeside: 'Open beside', pickProjectFile: 'Link project file…', chooseProject: 'Select project', noProjects: 'No projects', desktopOnly: 'The board is available on desktop only.', browser: 'Open', message: 'View message',
     comment: 'Add a comment', send: 'Post', byAgent: (n) => `⚡ ${n}`, byPerson: 'Me',
     noStatus: (e) => `Unable to read task status on this device: ${e}`, noBoard: (e) => `Unable to read the board: ${e}`,
     handText: (c) => `Please handle this card from the board (id ${c.id}): ${c.title}${c.note ? `\n\n${c.note}` : ''}\n\nClaim it with the board's claim tool when you start; when finished, move it to Review and link the output with link.`,
@@ -91,7 +89,10 @@ function change(op) {
 // A change refused is already said in #alert; the click that asked for it has nothing more to do.
 const quietly = (promise) => promise.catch(() => {})
 
-g.onBackgroundMessage((message) => {
+// A phone has no background page — and so neither the App's program nor this computer's board: say so and stop.
+const desktop = typeof gugu.onBackgroundMessage === 'function'
+
+if (desktop) g.onBackgroundMessage((message) => {
   if (message?.type === 'refused') {
     waiting.get(message.id)?.reject(new Error(message.message))
     waiting.delete(message.id)
@@ -224,7 +225,6 @@ $('heading').textContent = t.title
 $('new-title').placeholder = t.newPlaceholder
 $('new-title').setAttribute('aria-label', t.newPlaceholder)
 $('new-add').textContent = t.add
-$('note').textContent = t.note
 $('attach-label').textContent = t.attach
 $('new-card').addEventListener('submit', async (event) => {
   event.preventDefault()
@@ -336,7 +336,7 @@ async function updateDrawer() {
     return h('li', {},
       stateBadge(link),
       h('span', { class: 'what', text: row?.title ?? link.title ?? link.session }),
-      h('button', { text: t.open, onclick: () => g.showSession(link.session).catch((e) => showAlert(e.message)) }),
+      h('button', { text: t.open, onclick: () => g.showSession(link.session, { peek: true }).catch((e) => showAlert(e.message)) }),
       h('button', { text: t.handTo, onclick: () => g.compose(t.handText(card), { session: link.session }).catch((e) => showAlert(e.message)) }),
       h('button', { 'aria-label': t.remove, onclick: () => quietly(change({ type: 'link.remove', card: card.id, link: lid })) }, icon('x')),
     )
@@ -355,11 +355,13 @@ async function updateDrawer() {
   ].filter(Boolean))
 
   d.links.replaceChildren(...otherLinks(card).map(([lid, link]) => linkRow(card, lid, link)))
-  d.linkActions.replaceChildren(
+  d.linkActions.replaceChildren(...[
     h('button', { text: t.pickFile, onclick: () => pickTaskFile(card) }),
     h('button', { text: t.pickChatFile, onclick: () => pickChatFile(card) }),
+    // A gugu without project folders for Apps has no gugu.projects: the button is not offered there.
+    typeof g.projects?.list === 'function' ? h('button', { text: t.pickProjectFile, onclick: () => pickProjectFile(card) }) : null,
     h('button', { text: t.addUrl, onclick: () => addUrl(card) }),
-  )
+  ].filter(Boolean))
 
   if (d.noteEdit.hidden && d.shownNote !== card.note) {
     d.shownNote = card.note
@@ -380,9 +382,15 @@ function linkRow(card, lid, link) {
   const current = drawer.viewing === lid ? 'true' : 'false'
   switch (link.kind) {
     case 'file':
+    case 'project':
     case 'chatfile': {
-      const name = link.kind === 'file' ? link.path : (link.name ?? link.file)
-      return h('li', { 'aria-current': current }, icon('file-text'), h('span', { class: 'what', text: name, title: name }), h('button', { text: t.show, onclick: () => showFile(lid, link) }), remove)
+      const name = nameOf(link)
+      // Drawn in the card when the App can (md, text, images, video); every file also opens beside the board, in the
+      // App that opens it or gugu's own preview.
+      return h('li', { 'aria-current': current }, icon('file-text'), h('span', { class: 'what', text: name, title: name }),
+        drawable(name) ? h('button', { text: t.show, onclick: () => showFile(lid, link) }) : null,
+        h('button', { text: t.openBeside, onclick: () => g.files.openWith(refOf(link), { peek: true }).catch((e) => showAlert(e.message)) }),
+        remove)
     }
     case 'message':
       return h('li', {}, icon('message-square'), h('span', { class: 'what', text: link.excerpt ?? link.message }), h('button', { text: t.message, onclick: () => g.showMessage(link.message).catch((e) => showAlert(e.message)) }), remove)
@@ -397,6 +405,14 @@ const IMAGE = /\.(png|jpe?g|gif|webp|bmp|svg)$/i
 const VIDEO = /\.(mp4|webm|mov|m4v)$/i
 const MARKDOWN = /\.(md|markdown|mdx)$/i
 const TEXT = /\.(txt|json|jsonc|ya?ml|toml|csv|tsv|log|ini|env|xml|js|mjs|cjs|ts|tsx|jsx|css|scss|py|rb|go|rs|java|kt|swift|c|h|cc|cpp|hpp|sh|zsh|bash|sql|vue|svelte)$/i
+
+const drawable = (name) => IMAGE.test(name) || VIDEO.test(name) || MARKDOWN.test(name) || TEXT.test(name)
+const nameOf = (link) => (link.kind === 'chatfile' ? (link.name ?? link.file) : link.path)
+function refOf(link) {
+  if (link.kind === 'file') return { session: link.session, id: link.path }
+  if (link.kind === 'project') return { project: link.project, id: link.path }
+  return { id: link.file }
+}
 
 function closeView() {
   if (!drawer) return
@@ -413,18 +429,10 @@ async function showFile(lid, link) {
   closeView()
   d.viewing = lid
   updateDrawer()
-  const ref = link.kind === 'file' ? { session: link.session, id: link.path } : { id: link.file }
-  const name = link.kind === 'file' ? link.path : (link.name ?? '')
+  const ref = refOf(link)
+  const name = nameOf(link)
   const box = h('div', { class: 'view' })
   d.view.replaceChildren(box)
-  // What the App cannot draw itself (html, pdf, office, other Apps' files) opens where it lives, for now.
-  if (!IMAGE.test(name) && !VIDEO.test(name) && !MARKDOWN.test(name) && !TEXT.test(name)) {
-    box.replaceChildren(
-      h('div', { class: 'row' }, h('button', { text: t.openIn, onclick: () => g.files.openWith(ref).catch((e) => showAlert(e.message)) })),
-      h('small', { class: 'muted', text: t.peekLater }),
-    )
-    return
-  }
   try {
     const f = await g.files.open(ref)
     if (drawer !== d || d.viewing !== lid) return f.close()
@@ -513,6 +521,39 @@ function pickTaskFile(card) {
   })
 }
 
+function pickProjectFile(card) {
+  openPicker(t.chooseProject, async ({ list, filter, done }) => {
+    const { projects } = await g.projects.list()
+    const drawProjects = () => {
+      const q = filter.value.trim().toLowerCase()
+      const rows = projects.filter((p) => !q || p.name.toLowerCase().includes(q))
+      list.replaceChildren(...(rows.length
+        ? rows.map((p) => h('li', {}, h('button', { class: 'card', onclick: () => pickIn(p) }, h('strong', { text: p.name }))))
+        : [h('li', { class: 'muted', text: t.noProjects })]))
+    }
+    filter.addEventListener('input', drawProjects)
+    drawProjects()
+    const pickIn = async (project) => {
+      const entries = await g.files.list({ project: project.id }).catch((error) => { showAlert(error.message); return null })
+      if (!entries) return
+      const files = entries.filter((e) => e.type !== 'folder')
+      // The same box now filters this project's files (a fresh input: the project list's listener goes with the old one).
+      const fileFilter = h('input', { type: 'search', placeholder: t.filter, 'aria-label': t.filter })
+      filter.replaceWith(fileFilter)
+      fileFilter.focus()
+      const draw = () => {
+        const q = fileFilter.value.trim().toLowerCase()
+        const rows = files.filter((e) => !q || e.path.toLowerCase().includes(q)).slice(0, 80)
+        list.replaceChildren(...(rows.length
+          ? rows.map((e) => h('li', {}, h('button', { class: 'card', onclick: () => quietly(change({ type: 'link.add', card: card.id, link: { kind: 'project', project: project.id, path: e.path, title: project.name } }).then(done)) }, h('span', { text: `${project.name} / ${e.path}` }))))
+          : [h('li', { class: 'muted', text: t.noFiles })]))
+      }
+      fileFilter.addEventListener('input', draw)
+      draw()
+    }
+  })
+}
+
 function pickChatFile(card) {
   openPicker(t.pickChatFile, async ({ list, filter, done }) => {
     const pick = (e) => quietly(change({ type: 'link.add', card: card.id, link: { kind: 'chatfile', file: e.id, name: e.path ?? e.name, ...(e.chat ? { chat: e.chat } : {}) } }).then(done))
@@ -583,8 +624,12 @@ g.onContextChanged(async () => {
   placed()
   const now = ctx.layout?.visible ?? visible
   // Back on screen: read the board again (an agent's tool call may have changed it meanwhile).
-  if (now && !visible) g.sendToBackground({ type: 'hello' }).catch((e) => showAlert(e.message))
+  if (desktop && now && !visible) g.sendToBackground({ type: 'hello' }).catch((e) => showAlert(e.message))
   visible = now
 })
 
-g.sendToBackground({ type: 'hello' }).catch((error) => showAlert(error?.message ?? String(error)))
+if (desktop) {
+  g.sendToBackground({ type: 'hello' }).catch((error) => showAlert(error?.message ?? String(error)))
+} else {
+  $('shell').replaceChildren(h('gugu-empty', { icon: 'monitor' }, h('strong', { text: t.title }), h('small', { text: t.desktopOnly })))
+}

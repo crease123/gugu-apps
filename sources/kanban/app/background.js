@@ -7,9 +7,9 @@
  *   page always runs on this one.
  * - The tasks: this computer's agents (listAgents), sent to every page whenever one moves (onAgentsChanged), so each
  *   card shows its task's status.
- * - An agent's change through a tool reaches no page by itself yet (gugu tells pages nothing after a tools.js call;
- *   that notification is coming with the platform's next step, `tools/called`). Until then the board is read again when
- *   a page shows again, when an agent moves, and on that notification once it exists — never on a timer.
+ * - An agent's change through a tool: gugu sends `tools/called` after every tools.js call, and the board is read again.
+ *   A gugu too old to send it still has the board read again when a page shows again and when an agent moves — never
+ *   on a timer.
  */
 
 const g = window.gugu

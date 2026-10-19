@@ -9,7 +9,6 @@ body { margin: 0; }
 #attach-box { white-space: nowrap; }
 #tabs { display: none; }
 #board { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(220px, 1fr); gap: var(--em-spacing-md); overflow-x: auto; padding-bottom: var(--em-spacing-md); }
-footer { padding-bottom: var(--em-spacing-sm); }
 
 .col { display: flex; flex-direction: column; min-height: 0; background: var(--em-background-3); border-radius: var(--em-radius-xl); padding: var(--em-spacing-sm); gap: var(--em-spacing-sm); }
 .col > h2 { margin: 0; padding: var(--em-spacing-xs) var(--em-spacing-sm); font-size: var(--em-font-body); display: flex; gap: var(--em-spacing-sm); align-items: baseline; }

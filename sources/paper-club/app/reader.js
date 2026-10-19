@@ -12,7 +12,7 @@
 // (gugu.messages.search by file), kept per highlight by its pill's `at.h`. Nothing is pushed, so it is read again when
 // the page opens, shows again or gets the focus back (from the chat's composer), and when a thread or the side opens.
 import { openPdf, pdfjs } from './lib/pdf.js'
-import { COLORS, emptyNotes, folderOf, mergeRects, newId, notesNameOf, isNotes } from './lib/paper.js'
+import { COLORS, emptyNotes, folderOf, mergeRects, newId, notesNameOf, isNotes, placeOfEntry } from './lib/paper.js'
 import { fmt, stringsFor } from './lib/strings.js'
 import { createReview } from './lib/review.js'
 import { importFailure, importInto, uploadInto } from './lib/import-box.js'
@@ -24,7 +24,7 @@ const state = {
   t: stringsFor(navigator.language),
   ctx: null,
   entry: null, // the PDF's entry
-  place: null, // { chat } or { session }
+  place: null, // { chat }, { project } or { session }
   doc: null,
   notes: null, // the notes file's live handle, once there is one
   notesBusy: null, // the create in flight
@@ -73,9 +73,10 @@ async function start() {
   }
 }
 
-/** The library page's link: `?file=<id>&chat=<id>` (or `&session=<id>`) — the entry, found in its place's list. */
+/** The library page's link: `?file=<id>&chat=<id>` (or `&project=` / `&session=`) — the entry, found in its place's list. */
 async function fileFromAddress(asked) {
-  const place = asked.get('chat') ? { chat: asked.get('chat') } : { session: asked.get('session') }
+  const key = ['chat', 'project', 'session'].find((k) => asked.get(k))
+  const place = { [key]: asked.get(key) }
   const entry = (await gugu.files.list(place)).find((e) => e.id === asked.get('file'))
   if (!entry) throw new Error(state.t.gone)
   return entry
@@ -174,8 +175,6 @@ async function readDiscussions() {
 
 /** A message's words without its pills' links: 「@[A.pdf · p.4 · …](gugu-file://…)」 reads 「‹A.pdf · p.4 · …›」. */
 const plainText = (text) => String(text ?? '').replace(/@\[([^\]]*)\]\([^)]*\)/g, '‹$1›').replace(/\s+/g, ' ').trim()
-
-const placeOfEntry = (entry) => (entry.chat ? { chat: entry.chat } : { session: entry.session })
 
 function notesName() {
   const folder = folderOf(state.entry)
@@ -500,14 +499,44 @@ async function askAgent() {
 }
 
 /**
- * A passage to an agent, in the composer of where the paper is; the person @s whom they mean and sends it, or not.
- * A chat's PDF goes as a pill (a click opens it there). A session's PDF has no pill — a pill points at a chat's file —
- * so its agent gets the passage's words, page and path in that session's composer, and the person is told why.
+ * A passage to an agent, in a composer; the person sends it, or not. A chat's PDF goes as a pill into that chat's (a click
+ * opens it there). A session's PDF has no pill — a pill points at a chat's file — so its agent gets the passage's words,
+ * page and path in that session's composer, and the person is told why. A project's PDF (one person's library) goes to a
+ * task they pick on this computer, or a new one in that project (`askTask`).
  */
 function askAbout(id, h, text) {
   if (state.place.chat) return gugu.compose(text, { refs: [refOf(id, h)] })
+  if (state.place.project) return askTask(id, h, text)
   say(state.t.sessionNoPill)
   return gugu.compose(fmt(state.t.askSession, { text, path: state.entry.path ?? state.entry.name, n: h.page, quote: h.quote }), { session: state.place.session })
+}
+
+const ASK_TASKS = 8 // tasks listed to pick from: this project's first, then the latest
+
+/** Which task on this computer gets the passage: its words, page, project and path in its composer, or a new task's first words. */
+async function askTask(id, h, text) {
+  const t = state.t
+  const project = state.place.project
+  const name = (await gugu.projects.list()).projects.find((p) => p.id === project)?.name ?? project
+  const words = fmt(t.askProject, { text, project: name, id: project, path: state.entry.path ?? state.entry.name, n: h.page, quote: h.quote })
+  const tasks = (await gugu.listAgents())
+    .filter((a) => !a.deviceId)
+    .sort((a, b) => (b.projectId === project) - (a.projectId === project) || String(b.updatedAt).localeCompare(String(a.updatedAt)))
+    .slice(0, ASK_TASKS)
+  const pick = $('ask-pick')
+  const button = (label, onclick) => Object.assign(document.createElement('button'), { type: 'button', textContent: label, onclick })
+  const done = (promise, placed) =>
+    promise.then(() => { pick.hidden = true; say(placed) }).catch((error) => say(fmt(t.askFailed, { e: error.message }), 'error'))
+  const title = document.createElement('strong')
+  title.textContent = t.askWhich
+  pick.replaceChildren(
+    title,
+    ...(tasks.length ? [] : [note(t.askNone)]),
+    ...tasks.map((a) => button(a.title || a.agentId, () => done(gugu.compose(words, { session: a.sessionId }), fmt(t.askPlaced, { title: a.title || a.agentId })))),
+    Object.assign(button(t.askNew, () => done(gugu.spawnAgent(words, { project, title: $('title').textContent }), fmt(t.askStarted, { project: name }))), { className: 'primary' }),
+    button(t.close, () => { pick.hidden = true }),
+  )
+  pick.hidden = false
 }
 
 async function commentSelection() {
@@ -731,7 +760,7 @@ function drawHighlights(body) {
       }
       const said = state.discussed.get(id) ?? []
       if (said.length) card.append(discussionOf(id, said))
-      else if (state.focus === id && state.place?.session) card.append(note(t.noChatInSession))
+      else if (state.focus === id && !state.place?.chat) card.append(note(t.noChatInSession))
       else if (state.focus === id && !messagesReadable()) card.append(note(t.noMessagesHere))
       if (state.focus === id && canWrite()) card.append(replyBox(id, h))
       return card

@@ -1,20 +1,20 @@
 {
   "id": "paper-club",
   "name": "论文共读",
-  "description": "A chat's reading group for PDF papers: highlights, threads, sourced answers and study cards. Its tools read a paper, cite a passage as a pill that opens it there, comment, add study cards and import arXiv or DOI papers; its skill paper-club says how.",
+  "description": "Read papers alone or as a chat's reading group: highlights, threads, sourced answers, study cards. Its tools read a paper (a chat's or a project's on this computer), cite a passage as a link back to it, comment, add cards and import arXiv or DOI papers; skill paper-club says how.",
   "localized": {
     "zh": {
       "name": "论文共读",
-      "description": "在群里开读书会：打开群文件夹里的 PDF，或从 arXiv、DOI 导入一篇，大家一起划线、讨论，选一段直接问群里的 agent，它回答里的每个出处点一下就回到原文。学习卡记下每个人的复习和掌握度。"
+      "description": "一个人读，或在群里开读书会：从 arXiv、DOI 导入或上传 PDF，划线、讨论，选一段直接问 agent，它回答里的每个出处点一下就回到原文。一个人用时论文放在本机的项目文件夹里，问本机的任务；在群里时放在群文件夹里，问群里的 agent。学习卡记下每个人的复习和掌握度。"
     },
     "en": {
       "name": "Paper Club",
-      "description": "A reading group for papers in a chat: open a PDF from the chat's folder or import one from arXiv or a DOI, highlight and discuss it together, and ask the chat's agents about a passage — every source they cite opens the paper there. Cards keep each person's reviews."
+      "description": "Read papers alone or with a chat: import from arXiv or a DOI or upload a PDF, highlight and discuss it, and ask an agent about a passage — every source it cites opens the paper there. Alone, papers stay in a project folder on this computer; cards keep each person's reviews."
     }
   },
   "author": "咕咕",
-  "version": "0.2.0",
-  "apiVersion": 6,
+  "version": "0.3.0",
+  "apiVersion": 7,
   "engines": {
     "gugu": ">=0.2.57"
   },
@@ -35,6 +35,8 @@
       "files:write",
       "chat:relay",
       "chat:read",
+      "agents:read:all",
+      "agents:control",
       "agents:tools"
     ],
     "network": [

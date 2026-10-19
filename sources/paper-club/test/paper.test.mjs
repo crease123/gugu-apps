@@ -1,9 +1,9 @@
 // The pure parts the page and the program share: references, rects, quotes, and the review schedule.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mergeRects, notesNameOf, folderOf, parseRef, rectsOfQuote } from '../app/lib/paper.js'
+import { mergeRects, notesNameOf, folderOf, parseRef, placeOfEntry, rectsOfQuote } from '../app/lib/paper.js'
 import { mastery, schedule, isDue, MASTERED_DAYS } from '../app/lib/review.js'
-import { sameWork } from '../app/lib/importer.js'
+import { into, placed, sameWork } from '../app/lib/importer.js'
 
 test('parseRef reads arXiv ids, DOIs and links', () => {
   assert.deepEqual(parseRef('2310.06825'), { arxiv: '2310.06825' })
@@ -65,4 +65,21 @@ test('the same work by arXiv id or DOI', () => {
   assert.ok(sameWork({ arxiv: '1706.03762v7' }, { arxiv: '1706.03762' }))
   assert.ok(sameWork({ doi: '10.1/ABC' }, { doi: '10.1/abc' }))
   assert.ok(!sameWork({ title: 'a' }, { title: 'a' }))
+})
+
+test('a file\'s place: a chat, a project\'s folder on this computer, a session\'s working copy', () => {
+  assert.deepEqual(placeOfEntry({ id: 'x', chat: 'c-1' }), { chat: 'c-1' })
+  assert.deepEqual(placeOfEntry({ id: '论文/a.pdf', project: 'p-1' }), { project: 'p-1' })
+  assert.deepEqual(placeOfEntry({ id: '论文/a.pdf', session: 's-1' }), { session: 's-1' })
+})
+
+test('into a folder: a chat names it beside the name, a folder on this computer in the path', () => {
+  assert.deepEqual(placed({ chat: 'c-1' }, '论文', 'a.pdf'), { chat: 'c-1', name: 'a.pdf', folder: '论文' })
+  assert.deepEqual(placed({ project: 'p-1' }, '论文', 'a.pdf'), { project: 'p-1', name: '论文/a.pdf' })
+  assert.deepEqual(placed({ session: 's-1' }, '', 'a.pdf'), { session: 's-1', name: 'a.pdf' })
+  const file = new File(['%PDF-'], 'a.pdf', { type: 'application/pdf' })
+  assert.deepEqual(into({ chat: 'c-1' }, '论文', file)[0], { chat: 'c-1', folder: '论文' })
+  const [place, named] = into({ project: 'p-1' }, '论文', file)
+  assert.deepEqual(place, { project: 'p-1' })
+  assert.equal(named.name, '论文/a.pdf')
 })

@@ -32,6 +32,14 @@ export async function importPaper(ref, io) {
   return { pdf, notes, meta, existed: false }
 }
 
+// A chat's folder is a `folder` beside the name; a folder on this computer (a project's, a session's working copy) has
+// none: there the path is the file's name.
+/** Where `files.create` makes `name` in `folder` of `place`. */
+export const placed = (place, folder, name) => (place.chat ? { ...place, name, ...(folder ? { folder } : {}) } : { ...place, name: folder ? `${folder}/${name}` : name })
+/** What `files.upload` takes to put `file` in `folder` of `place`. */
+export const into = (place, folder, file) =>
+  place.chat ? [{ ...place, folder }, file] : [place, new File([file], `${folder}/${file.name}`, { type: file.type })]
+
 /** The chat's notes files whose paper is this one (same arXiv id or DOI). */
 export function sameWork(a, b) {
   if (!a || !b) return false

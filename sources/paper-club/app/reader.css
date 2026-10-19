@@ -15,6 +15,8 @@ body { margin: 0; display: flex; flex-direction: column; overflow: hidden; }
 .reader.following { border-color: var(--who); }
 .reader small { font-variant-numeric: tabular-nums; }
 
+.ask-pick { flex-wrap: wrap; align-items: center; gap: var(--em-spacing-xs); padding: var(--em-spacing-xs) var(--em-spacing-sm); border-bottom: 1px solid var(--em-border); }
+.ask-pick[hidden] { display: none; }
 .banner { margin: 0; padding: var(--em-spacing-xs) var(--em-spacing-md); background: var(--em-background-info); color: var(--em-foreground-info); }
 .banner[data-kind='error'] { background: var(--em-background-destructive); color: var(--em-foreground-destructive); }
 

@@ -1,21 +1,23 @@
 /* global gugu */ // window.gugu: the platform runtime puts it on the page before this module runs.
 // 论文共读 — the shelf: the tab that claims no file. Where it is decides what it lists:
 // - the App's own page (its icon in the left bar; no chat, no session): the person's library — every paper in every chat
-//   they are in (files.search), with the chat it is in, its marks, who is reading it and their own mastery and due cards;
-//   an import goes into the chat they pick.
+//   they are in (files.search) and in a project's folder on this computer (one person alone, no chat needed), each with
+//   where it is, its marks, who is reading it and their own mastery and due cards; an import goes where they pick — a
+//   project (gugu.projects, a desktop's) or a chat — and opens in the reader.
 // - a chat: that chat's papers, imports go there. (Today a chat's side panel holds only the folder and Apps opened for a
 //   file — GroupAppSlot — so this is for when it holds Apps of their own; the code is the same.)
 // - a session: the working copy's PDFs.
 // An arXiv id, a DOI or a link imports a paper (lib/import-box.js), or a PDF is uploaded. A paper clicked opens right
 // here in the same reader a chat's panel uses (reader.html?file=…), with everything it does; its due cards, on Cards.
 import { importFailure, importInto, uploadInto } from './lib/import-box.js'
-import { isNotes, isPdf } from './lib/paper.js'
+import { isNotes, isPdf, placeOfEntry } from './lib/paper.js'
 import { isDue, mastery } from './lib/review.js'
 import { fmt, stringsFor } from './lib/strings.js'
 
 const $ = (id) => document.getElementById(id)
 const MAX_OPEN = 40 // notes files opened for their counts; past that, a row says only its name
-const state = { t: stringsFor(navigator.language), ctx: null, place: null, library: false, entries: [], notes: new Map(), me: null }
+const state = { t: stringsFor(navigator.language), ctx: null, place: null, library: false, entries: [], notes: new Map(), me: null, targets: [], projects: new Map() }
+const TARGET_KEY = 'paper-club.target' // the place an import goes, remembered on this screen
 
 async function start() {
   const ctx = await gugu.getContext()
@@ -36,6 +38,7 @@ async function start() {
   if (state.library) {
     $('target').hidden = false
     $('target').setAttribute('aria-label', t.importInto)
+    $('target').onchange = () => { remember($('target').value); refresh() }
     $('list-title').textContent = t.library
     // Every chat's folder can change: the list is read again when the page is looked at again.
     gugu.onContextChanged((next) => { if (next.layout?.visible) refresh() })
@@ -65,24 +68,49 @@ async function refresh() {
   return refreshing
 }
 
-/** The library: every PDF and notes file in the person's chats (newest first), each with its chat's name. */
+/**
+ * The library: every PDF and notes file in the person's chats, and in the folder of the project picked to keep papers in
+ * (a desktop's projects; a phone has none). The places an import may go: those projects, then the chats with papers.
+ */
 async function libraryEntries() {
-  const [pdfs, notes] = await Promise.all([
+  const [pdfs, notes, projects] = await Promise.all([
     gugu.files.search({ suffixes: ['.pdf'], limit: 200 }),
     gugu.files.search({ query: '.paper', suffixes: ['.json'], limit: 200 }),
+    typeof gugu.projects?.list === 'function' ? gugu.projects.list().then((r) => r.projects) : null,
   ])
+  state.projects = new Map((projects ?? []).map((p) => [p.id, p.name]))
   const chats = new Map()
   for (const e of [...pdfs, ...notes]) if (e.chat && !chats.has(e.chat)) chats.set(e.chat, e.chatName ?? e.chat)
-  drawTargets(chats)
-  return [...pdfs, ...notes]
+  drawTargets(chats, projects)
+  const place = targetPlace()
+  const here = place?.project ? (await gugu.files.list(place)).filter((e) => isPdf(e) || isNotes(e)) : []
+  return [...here, ...pdfs, ...notes]
 }
 
-function drawTargets(chats) {
+function drawTargets(chats, projects) {
+  const t = state.t
+  state.targets = [
+    ...(projects ?? []).map((p) => ({ value: `project:${p.id}`, place: { project: p.id }, label: fmt(t.onThisComputer, { name: p.name }) })),
+    ...[...chats].map(([id, name]) => ({ value: `chat:${id}`, place: { chat: id }, label: name })),
+  ]
   const select = $('target')
-  const was = select.value
-  select.replaceChildren(...[...chats].map(([id, name]) => Object.assign(document.createElement('option'), { value: id, textContent: name })))
-  if ([...chats.keys()].includes(was)) select.value = was
-  $('import').hidden = chats.size === 0
+  const want = select.value || remembered()
+  select.replaceChildren(...state.targets.map((x) => Object.assign(document.createElement('option'), { value: x.value, textContent: x.label })))
+  if (state.targets.some((x) => x.value === want)) select.value = want
+  $('import').hidden = state.targets.length === 0
+  // Where a person alone keeps papers, and why it may not be here: no projects on this device (a phone, an older gugu), or none yet.
+  const note = projects === null ? t.noLocalHere : projects.length === 0 ? t.noProject : null
+  $('note').hidden = !note
+  $('note').textContent = note ?? ''
+}
+
+const targetPlace = () => state.targets.find((x) => x.value === $('target').value)?.place ?? null
+
+function remembered() {
+  try { return localStorage.getItem(TARGET_KEY) ?? '' } catch { return '' }
+}
+function remember(value) {
+  try { localStorage.setItem(TARGET_KEY, value) } catch { /* a screen that keeps nothing: picked again next time */ }
 }
 
 /** Each notes file of the chat, opened live (its counts and readers stay current); ones gone are let go. */
@@ -135,7 +163,7 @@ function draw() {
         meta.authors?.length ? `${meta.authors[0]}${meta.authors.length > 1 ? ' …' : ''}` : null,
         marks ? fmt(t.marks, { n: marks }) : null,
         readers ? `${readers} ${t.readingNow}` : null,
-        state.library ? pdf.chatName : null,
+        state.library ? (pdf.project ? fmt(t.onThisComputer, { name: state.projects.get(pdf.project) ?? pdf.project }) : pdf.chatName) : null,
         due(f) ? fmt(t.dueCount, { n: due(f) }) : null,
       ].filter(Boolean).join(' · ')
       text.append(title, sub)
@@ -177,9 +205,9 @@ function due(f) {
   return cards.filter((id) => isDue(mine[id])).length
 }
 
-/** The reader for one paper, in this page: its file (and chat or session) in the address, a tab to start on. */
+/** The reader for one paper, in this page: its file (and its chat, project or session) in the address, a tab to start on. */
 function readerUrl(pdf, tab) {
-  const q = new URLSearchParams({ file: pdf.id, ...(pdf.chat ? { chat: pdf.chat } : { session: pdf.session }), from: 'shelf', ...(tab ? { tab } : {}) })
+  const q = new URLSearchParams({ file: pdf.id, ...placeOfEntry(pdf), from: 'shelf', ...(tab ? { tab } : {}) })
   return `reader.html?${q}`
 }
 
@@ -195,8 +223,8 @@ function empty(text) {
 
 // ─── import (lib/import-box.js: the one way, shared with the reader's import box) ────
 
-/** Where an import goes: this chat or working copy, or (the library) the chat picked. */
-const importPlace = () => (state.library ? { chat: $('target').value } : state.place)
+/** Where an import goes: this chat or working copy, or (the library) the place picked. */
+const importPlace = () => (state.library ? targetPlace() : state.place)
 
 async function onImport(event) {
   event.preventDefault()
@@ -204,9 +232,12 @@ async function onImport(event) {
   say(state.t.importing)
   $('import-go').disabled = true
   try {
-    const done = await importInto(importPlace(), input)
+    const place = importPlace()
+    const done = await importInto(place, input)
     say(fmt(state.t.imported, { title: done.title }))
     $('ref').value = ''
+    // From the library, the paper opens to be read at once.
+    if (state.library && done.pdf) return void (location.href = readerUrl({ id: done.pdf, ...place }))
     await refresh()
   } catch (error) {
     say(importFailure(error, state.t, input), 'error')

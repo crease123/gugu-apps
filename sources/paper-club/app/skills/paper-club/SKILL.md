@@ -13,7 +13,9 @@ draws them; you reach them with its tools (`paper-club__…` in `catalog_list`, 
 
 - **Answer from the paper, and show where.** Every claim about the paper carries a pill to its passage. Get one with
   `paper-club__cite` (page + the exact words) and put it in your message as it is: `@[Paper.pdf · p.4 · …](gugu-file://…)`.
-  A click opens the paper at that passage. Never write a page number without a pill.
+  A click opens the paper at that passage. Never write a page number without a pill. A paper on this computer (a project's
+  folder, your working copy) has no pill: `cite` gives a link to its path, `[Paper.pdf · p.4 · …](论文/Paper.pdf#page=4&h=…)`
+  — put that in your answer as it is; in a task's chat a click opens it at the passage.
 - **Collect evidence first, then answer.** `paper-club__evidence` finds the passages that bear on a question; read around
   them with `paper-club__read`; answer only from what you found. When the paper does not say, say so ("the paper does not
   state this") instead of answering from memory. Say which parts are your own reasoning.
@@ -24,6 +26,12 @@ draws them; you reach them with its tools (`paper-club__…` in `catalog_list`, 
   marked the passage or asked the same thing. Reply in that thread (`paper-club__comment`) rather than starting another.
 - **Mark only what you use.** `paper-club__cite` makes a highlight under your name: cite the passages your answer rests on,
   not every hit.
+
+## A paper on this computer
+
+Someone reading alone keeps papers in a project's folder on their computer, and asks a task here: the message names the
+project's id and the PDF's path. Give every tool `project` and `path` (instead of `paper`) — they find the PDF and its notes
+however your own working copy is laid out. Your answer goes in the task's chat, its sources as `cite`'s links.
 
 ## When someone asks about a passage
 
@@ -56,8 +64,9 @@ kept. Make them only from what you have read, and each from a passage (`on` a hi
 
 ## Importing a paper
 
-`paper-club__import_paper` takes an arXiv id or link, a DOI, or a link to a PDF, and the chat: the PDF goes into the folder
-`论文` with its title, authors and abstract. A paper already in the chat is not imported twice.
+`paper-club__import_paper` takes an arXiv id or link, a DOI, or a link to a PDF, and the chat (or `project`, a project's
+folder on this computer): the PDF goes into the folder `论文` with its title, authors and abstract. A paper already there
+is not imported twice.
 
 ## Reproducing a result
 

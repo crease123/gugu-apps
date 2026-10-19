@@ -28,6 +28,9 @@ export function notesNameOf(pdfName) {
   return `${base.replace(/\.pdf$/i, '')} · 笔记${NOTES_SUFFIX}`
 }
 
+/** The place a file lives in, as gugu.files names places: a chat, a project's folder on this computer, a session's working copy. */
+export const placeOfEntry = (entry) => (entry.chat ? { chat: entry.chat } : entry.project ? { project: entry.project } : { session: entry.session })
+
 /** The folder a file is in, as `files.create` takes it ('' is the top). */
 export function folderOf(entry) {
   const path = entry?.path ?? entry?.name ?? ''

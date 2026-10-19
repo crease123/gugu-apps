@@ -1,5 +1,9 @@
 # 看板
 
+![看板四列卡片，进行中的卡片显示所关联任务的运行状态](screenshots/1.jpg)
+![agent 在任务中按要求新建卡片并关联排查报告](screenshots/2.jpg)
+![在卡片内直接查看关联的 Markdown 文件](screenshots/3.jpg)
+
 本机任务看板。数据只保存在这台电脑上。
 
 ## 入口

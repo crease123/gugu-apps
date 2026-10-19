@@ -1,5 +1,9 @@
 # Browser Use
 
+![agent 在浏览器页签中查阅 GitHub 发布页，并整理出版本信息](screenshots/1.jpg)
+![agent 正在浏览器页签中执行搜索](screenshots/2.jpg)
+![agent 打开 Node.js 文档的指定章节并汇总要点](screenshots/3.jpg)
+
 让 Agent 在自己会话的咕咕浏览器页签里浏览、点击、填写和截图。复用该页签的浏览器配置和登录，不启动独立浏览器。
 
 安装后点击 App，打开咕咕提供的配置与状态页：设置新页签的起始网址、控制 Agent 使用权限、查看当前网页，并停止或恢复 Agent 的操作。浏览器配置和导入登录仍在咕咕「设置 → 浏览器」。

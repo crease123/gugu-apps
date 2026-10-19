@@ -16,7 +16,7 @@ import { fmt, stringsFor } from './lib/strings.js'
 
 const $ = (id) => document.getElementById(id)
 const MAX_OPEN = 40 // notes files opened for their counts; past that, a row says only its name
-const state = { t: stringsFor(navigator.language), ctx: null, place: null, library: false, entries: [], notes: new Map(), me: null, targets: [], projects: new Map() }
+const state = { t: stringsFor(navigator.language), ctx: null, place: null, library: false, entries: [], notes: new Map(), me: null, targets: [], projects: new Map(), note: null }
 const TARGET_KEY = 'paper-club.target' // the place an import goes, remembered on this screen
 
 async function start() {
@@ -99,9 +99,7 @@ function drawTargets(chats, projects) {
   if (state.targets.some((x) => x.value === want)) select.value = want
   $('import').hidden = state.targets.length === 0
   // Where a person alone keeps papers, and why it may not be here: no projects on this device (a phone, an older gugu), or none yet.
-  const note = projects === null ? t.noLocalHere : projects.length === 0 ? t.noProject : null
-  $('note').hidden = !note
-  $('note').textContent = note ?? ''
+  state.note = projects === null ? t.noLocalHere : projects.length === 0 ? t.noProject : null
 }
 
 const targetPlace = () => state.targets.find((x) => x.value === $('target').value)?.place ?? null
@@ -142,8 +140,10 @@ function notesOf(pdf) {
 function draw() {
   const t = state.t
   const pdfs = state.entries.filter(isPdf).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
-  // The library with nowhere to import into says why in its note alone: no 「paste one above」 under an import bar not there.
-  if (!pdfs.length) return empty(state.library ? (state.targets.length ? t.libraryEmpty : null) : state.ctx.chat ? t.shelfEmpty : t.sessionEmpty)
+  // The library's note (no project here, or none yet) is its empty page when there are no papers, a line above them when there are.
+  $('note').hidden = !(state.note && pdfs.length)
+  $('note').textContent = state.note ?? ''
+  if (!pdfs.length) return empty(state.library ? state.note ?? t.libraryEmpty : state.ctx.chat ? t.shelfEmpty : t.sessionEmpty)
   $('list-title').hidden = false
   $('empty').replaceChildren()
   $('papers').replaceChildren(
@@ -214,7 +214,6 @@ function readerUrl(pdf, tab) {
 
 function empty(text) {
   $('papers').replaceChildren()
-  if (!text) return $('empty').replaceChildren()
   const node = document.createElement('gugu-empty')
   node.setAttribute('icon', 'book-open')
   const strong = document.createElement('strong')

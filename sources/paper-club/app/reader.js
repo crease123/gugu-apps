@@ -543,7 +543,14 @@ async function askTask(id, h, text) {
     title,
     ...(tasks.length ? [] : [note(t.askNone)]),
     ...tasks.map((a) => button(a.title || a.agentId, () => done(gugu.compose(words, { session: a.sessionId }), fmt(t.askPlaced, { title: a.title || a.agentId })))),
-    Object.assign(button(t.askNew, () => done(gugu.spawnAgent(words, { project, title: $('title').textContent }), fmt(t.askStarted, { project: name }))), { className: 'primary' }),
+    Object.assign(button(t.askNew, () => {
+      // Starting a task takes a while (its agent comes up first): said at once, and no second one started meanwhile.
+      say(t.askStarting)
+      for (const b of pick.querySelectorAll('button')) b.disabled = true
+      done(gugu.spawnAgent(words, { project, title: $('title').textContent }), fmt(t.askStarted, { project: name })).finally(() => {
+        for (const b of pick.querySelectorAll('button')) b.disabled = false
+      })
+    }), { className: 'primary' }),
     button(t.close, () => { pick.hidden = true }),
   )
   pick.hidden = false

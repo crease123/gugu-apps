@@ -138,7 +138,7 @@ function open(event, post) {
 function showAlert(error, retry, text = retry ? T.loadFailed : T.failed) {
   const box = $('alert')
   console.error('[bounty]', error)
-  box.replaceChildren(h('span', { text }), retry ? h('button', { type: 'button', text: T.retry, onclick: retry }) : null)
+  box.replaceChildren(...[h('span', { text }), retry ? h('button', { type: 'button', text: T.retry, onclick: retry }) : null].filter(Boolean))
   box.hidden = false
 }
 

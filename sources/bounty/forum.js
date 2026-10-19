@@ -23,6 +23,7 @@ const T = en
       by: (name, n) => (n === null ? name : `${name} · ${n} points`),
       empty: 'No bounties yet', emptyHint: 'Post the first one', emptyFiltered: 'No bounties match',
       loadFailed: 'Could not load bounties.', retry: 'Retry', failed: 'Could not complete the action. Try again.',
+      openFailed: "This bounty can't be opened.",
     }
   : {
       title: '悬赏', compose: '发布悬赏',
@@ -42,6 +43,7 @@ const T = en
       by: (name, n) => (n === null ? name : `${name} · ${n} 积分`),
       empty: '还没有悬赏', emptyHint: '发布第一个悬赏', emptyFiltered: '没有符合条件的悬赏',
       loadFailed: '悬赏列表加载失败。', retry: '重试', failed: '操作未完成，请重试。',
+      openFailed: '无法打开该悬赏。',
     }
 
 /**截止后还有 24 小时可以采纳(behavior/bounty.md「到期」)。 */
@@ -129,13 +131,14 @@ function row(post, now) {
 
 function open(event, post) {
   event.preventDefault()
-  g.chats.open(post.chat_id).catch((error) => showAlert(error))
+  // A bounty this person cannot read (taken down, or not a bounty at all): the host answers not-found / denied.
+  g.chats.open(post.chat_id).catch((error) => showAlert(error, null, error?.code === 'not-found' || error?.code === 'denied' ? T.openFailed : T.failed))
 }
 
-function showAlert(error, retry) {
+function showAlert(error, retry, text = retry ? T.loadFailed : T.failed) {
   const box = $('alert')
   console.error('[bounty]', error)
-  box.replaceChildren(h('span', { text: retry ? T.loadFailed : T.failed }), retry ? h('button', { type: 'button', text: T.retry, onclick: retry }) : null)
+  box.replaceChildren(h('span', { text }), retry ? h('button', { type: 'button', text: T.retry, onclick: retry }) : null)
   box.hidden = false
 }
 

@@ -30,7 +30,7 @@ const WORDS = {
     attachCurrent: 'Link current task', pickTask: 'Link task…', start: 'New task', starting: 'Creating task…',
     pickFile: 'Link task file…', pickChatFile: 'Link chat file…', addUrl: 'Add link', urlPlaceholder: 'https://…', ok: 'OK', cancel: 'Cancel',
     filter: 'Filter', chooseTask: 'Select task', noTasks: 'No tasks on this device', noFiles: 'No files found. Enter a file name to search all chats.',
-    show: 'View', openBeside: 'Open beside', pickProjectFile: 'Link project file…', chooseProject: 'Select project', noProjects: 'No projects', desktopOnly: 'The board is available on desktop only.', browser: 'Open', message: 'View message',
+    show: 'View', openBeside: 'Open beside', pickProjectFile: 'Link project file…', chooseProject: 'Select project', noProjects: 'No projects', desktopOnly: 'The board is only available on a computer.', browser: 'Open', message: 'View message',
     comment: 'Add a comment', send: 'Post', byAgent: (n) => `⚡ ${n}`, byPerson: 'Me',
     noStatus: (e) => `Unable to read task status on this device: ${e}`, noBoard: (e) => `Unable to read the board: ${e}`,
     handText: (c) => `Please handle this card from the board (id ${c.id}): ${c.title}${c.note ? `\n\n${c.note}` : ''}\n\nClaim it with the board's claim tool when you start; when finished, move it to Review and link the output with link.`,
@@ -90,7 +90,7 @@ function change(op) {
 const quietly = (promise) => promise.catch(() => {})
 
 // A phone has no background page — and so neither the App's program nor this computer's board: say so and stop.
-const desktop = typeof gugu.onBackgroundMessage === 'function'
+const desktop = typeof g.onBackgroundMessage === 'function'
 
 if (desktop) g.onBackgroundMessage((message) => {
   if (message?.type === 'refused') {
